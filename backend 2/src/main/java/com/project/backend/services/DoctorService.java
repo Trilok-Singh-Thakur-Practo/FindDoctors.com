@@ -10,12 +10,13 @@ import com.project.backend.repositries.DoctorPracticeRepository;
 import com.project.backend.repositries.DoctorRepository;
 import com.project.backend.repositries.PracticeRepository;
 import com.project.backend.repositries.SpecialityRepository;
+import com.project.backend.DTOs.DoctorDTO;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,43 +24,41 @@ import java.util.stream.Collectors;
 @Service
 public class DoctorService {
 
-    @Autowired
-    private DoctorIndexRepository doctorIndexRepository;
+    private final DoctorIndexRepository doctorIndexRepository;
+    private final DoctorRepository doctorRepository;
+    private final SpecialityRepository specialityRepository;
+    private final PracticeRepository practiceRepository;
+    private final DoctorPracticeRepository doctorPracticeRepository;
 
     @Autowired
-    private DoctorRepository doctorRepository;
+    public DoctorService(DoctorIndexRepository doctorIndexRepository, DoctorRepository doctorRepository,
+                         SpecialityRepository specialityRepository, PracticeRepository practiceRepository,
+                         DoctorPracticeRepository doctorPracticeRepository) {
+        this.doctorIndexRepository = doctorIndexRepository;
+        this.doctorRepository = doctorRepository;
+        this.specialityRepository = specialityRepository;
+        this.practiceRepository = practiceRepository;
+        this.doctorPracticeRepository = doctorPracticeRepository;
+    }
 
-    @Autowired
-    private SpecialityRepository specialityRepository;
-
-    @Autowired
-    private PracticeRepository practiceRepository;
-
-    @Autowired
-    private DoctorPracticeRepository doctorPracticeRepository;
-
-    public ResponseEntity<Doctor> addDoctor(Doctor doctor, Integer specialityId, List<Integer> practiceIds) {
-
-        // Fetch the speciality by ID
+    @Transactional
+    public ResponseEntity<DoctorDTO> addDoctor(Doctor doctor, Integer specialityId, List<Integer> practiceIds) {
         Speciality speciality = specialityRepository.findById(specialityId)
                 .orElseThrow(() -> new RuntimeException("Speciality not found"));
         doctor.setSpeciality(speciality);
 
-        // Fetch Practices
-        List<Practice> practices = practiceRepository.findAllById(practiceIds);
-
-        // Create DoctorPractice associations
-
-        for (Practice practice : practices) {
-            DoctorPractice doctorPractice = new DoctorPractice();
-            doctorPractice.setDoctor(doctor);
-            doctorPractice.setPractice(practice);
-            doctorPracticeRepository.save(doctorPractice);
-        }
-
         Doctor savedDoctor = doctorRepository.save(doctor);
 
-        // Indexing into Elasticsearch
+        List<Practice> practices = practiceRepository.findAllById(practiceIds);
+        List<DoctorPractice> doctorPractices = practices.stream().map(practice -> {
+            DoctorPractice doctorPractice = new DoctorPractice();
+            doctorPractice.setDoctor(savedDoctor);
+            doctorPractice.setPractice(practice);
+            return doctorPractice;
+        }).collect(Collectors.toList());
+
+        doctorPracticeRepository.saveAll(doctorPractices);
+
         DoctorIndex doctorIndex = new DoctorIndex(
                 savedDoctor.getDoctorId(),
                 savedDoctor.getName(),
@@ -67,36 +66,48 @@ public class DoctorService {
         );
         doctorIndexRepository.save(doctorIndex);
 
-        return ResponseEntity.ok(savedDoctor);
-
+        DoctorDTO doctorDTO = convertToDTO(savedDoctor);
+        return ResponseEntity.ok(doctorDTO);
     }
 
-    public ResponseEntity<List<Doctor>> searchByNameOrSpecialization(String query) {
+    public ResponseEntity<List<DoctorDTO>> searchByNameOrSpecialization(String query) {
         List<DoctorIndex> doctorIndexList = doctorIndexRepository.findByNameContainingIgnoreCaseOrSpecialityContainingIgnoreCase(query, query);
-
-        // Step 2: Extract doctor IDs from Elasticsearch results
-        List<Integer> doctorIds = doctorIndexList.stream()
-                .map(DoctorIndex::getDoctorId)
-                .collect(Collectors.toList());
-
-        List<Doctor> doctorList = doctorRepository.findAllById(doctorIds);
-
-        return ResponseEntity.ok(doctorList);
+        List<Integer> doctorIds = doctorIndexList.stream().map(DoctorIndex::getDoctorId).collect(Collectors.toList());
+        List<Doctor> doctors = doctorRepository.findAllById(doctorIds);
+        List<DoctorDTO> doctorDTOs = doctors.stream().map(this::convertToDTO).collect(Collectors.toList());
+        return ResponseEntity.ok(doctorDTOs);
     }
 
-    public ResponseEntity<List<Doctor>> searchAllDoctors() {
-        List<Doctor> doctorList = doctorRepository.findAll();
-
-        return ResponseEntity.ok(doctorList);
+    public ResponseEntity<List<DoctorDTO>> searchAllDoctors() {
+        List<Doctor> doctors = doctorRepository.findAll();
+        List<DoctorDTO> doctorDTOs = doctors.stream().map(this::convertToDTO).collect(Collectors.toList());
+        return ResponseEntity.ok(doctorDTOs);
     }
 
     public ResponseEntity<?> getDoctorById(Integer doctorId) {
         Optional<Doctor> optionalDoctor = doctorRepository.findById(doctorId);
-
-        if(optionalDoctor.isEmpty()){
+        if (optionalDoctor.isEmpty()) {
             return new ResponseEntity<>("NOT FOUND", HttpStatus.NOT_FOUND);
         }
+        DoctorDTO doctorDTO = convertToDTO(optionalDoctor.get());
+        return ResponseEntity.ok(doctorDTO);
+    }
 
-        return new ResponseEntity<>(optionalDoctor.get(), HttpStatus.OK);
+    private DoctorDTO convertToDTO(Doctor doctor) {
+        DoctorDTO doctorDTO = new DoctorDTO();
+        doctorDTO.setDoctorId(doctor.getDoctorId());
+        doctorDTO.setName(doctor.getName());
+        doctorDTO.setEmail(doctor.getEmail());
+        doctorDTO.setPhone(doctor.getPhone());
+        doctorDTO.setConsultationFee(doctor.getConsultationFee());
+        doctorDTO.setExperience(doctor.getExperience());
+        doctorDTO.setQualifications(doctor.getQualifications());
+        doctorDTO.setCity(doctor.getCity());
+        doctorDTO.setBio(doctor.getBio());
+        doctorDTO.setSpecialityName(doctor.getSpeciality().getSpecialityName());
+        doctorDTO.setPracticeNames(doctor.getPractices().stream()
+                .map(dp -> dp.getPractice().getName())
+                .collect(Collectors.toList()));
+        return doctorDTO;
     }
 }

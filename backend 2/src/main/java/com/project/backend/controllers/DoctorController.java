@@ -1,5 +1,6 @@
 package com.project.backend.controllers;
 
+import com.project.backend.DTOs.DoctorDTO;
 import com.project.backend.entities.Doctor;
 import com.project.backend.services.DoctorService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,7 @@ public class DoctorController {
     private DoctorService doctorService;
 
     @PostMapping("/add-doctor")
-    public ResponseEntity<Doctor> addDoctor(
+    public ResponseEntity<DoctorDTO> addDoctor(
             @RequestBody Doctor doctor,
             @RequestParam Integer specialityId,
             @RequestParam List<Integer> practiceIds
@@ -27,12 +28,12 @@ public class DoctorController {
 
     //search by name or specialization
     @GetMapping("/search")
-    public ResponseEntity<List<Doctor>> searchByNameOrSpecialization(@RequestParam String query){
+    public ResponseEntity<List<DoctorDTO>> searchByNameOrSpecialization(@RequestParam String query){
         return doctorService.searchByNameOrSpecialization(query);
     }
 
     @GetMapping("/all-doctors")
-    public ResponseEntity<List<Doctor>> searchAllDoctors(){
+    public ResponseEntity<List<DoctorDTO>> searchAllDoctors(){
         return doctorService.searchAllDoctors();
     }
 

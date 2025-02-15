@@ -1,5 +1,7 @@
 package com.project.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.type.SpecialOneToOneType;
@@ -31,6 +33,7 @@ public class Doctor {
 
 
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL)
+    @JsonIgnore  // Prevent infinite recursion
     private List<DoctorPractice> practices = new ArrayList<>();
 }
 

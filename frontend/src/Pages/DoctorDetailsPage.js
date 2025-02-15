@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
-function DoctorDetails() {
+function DoctorDetailsPage() {
   const { doctorId } = useParams();
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -77,4 +77,4 @@ function DoctorDetails() {
   );
 }
 
-export default DoctorDetails;
+export default DoctorDetailsPage;

@@ -1,5 +1,7 @@
 package com.project.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -24,6 +26,7 @@ public class Practice {
     private Speciality speciality;
 
     @OneToMany(mappedBy = "practice", cascade = CascadeType.ALL)
+    @JsonIgnore  // Prevent infinite recursion
     private List<DoctorPractice> doctors = new ArrayList<>();
 }
 

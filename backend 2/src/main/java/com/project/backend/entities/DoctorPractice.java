@@ -18,6 +18,5 @@ public class DoctorPractice {
     @JoinColumn(name = "practice_id")
     private Practice practice;
 
-    private double consultationFee; //Extra field specific to this relation
 }
 
