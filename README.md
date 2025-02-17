@@ -1,4 +1,4 @@
-# Practo Clone - Doctor & Practice Search System
+# DocFinder - Doctor & Practice Search System
 
 ## Overview  
 This project is a **Doctor and Practice (Hospital/Clinic) Search System**, similar to **Practo**.  
