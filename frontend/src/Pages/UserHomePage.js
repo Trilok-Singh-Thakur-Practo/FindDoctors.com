@@ -4,7 +4,7 @@ export default function UserHomePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-200 to-blue-500 px-6">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-100 to-blue-300 px-6">
       
       <div className="w-full max-w-3xl bg-white bg-opacity-90 backdrop-blur-md p-10 rounded-3xl shadow-2xl flex flex-col items-center space-y-6">
         

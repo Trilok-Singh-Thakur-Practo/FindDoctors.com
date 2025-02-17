@@ -17,7 +17,7 @@ const SearchDoctorsPage = () => {
       })
       .catch((err) => console.error("Error fetching specialities:", err));
 
-      // 🔹 Default search for "Dentist"
+      // Default search for "Dentist"
       handleSearch("Dentist");
   }, []);
 
@@ -44,7 +44,7 @@ const SearchDoctorsPage = () => {
   };
 
   return (
-    <div className="min-h-screen mt-16 flex flex-col items-center justify-start bg-gradient-to-br from-blue-100 to-blue-300 py-10 px-6">
+    <div className="min-h-screen mt-16 flex flex-col items-center justify-start bg-gradient-to-br from-blue-100 to-blue-200 py-10 px-6">
       {/* Title */}
       <h1 className="text-4xl font-bold text-gray-800 mb-6 text-center">
         Find Best Doctor for You

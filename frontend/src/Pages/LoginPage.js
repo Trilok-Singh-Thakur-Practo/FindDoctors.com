@@ -11,9 +11,9 @@ export default function LoginPage() {
     e.preventDefault();
 
     if (role === "admin") {
-      if (password === "admin123") {
+      if (password === "123") {
         alert("Admin Login Successful!");
-        // Redirect to Admin Dashboard
+        navigate('/admin-home');
       } else {
         alert("Incorrect Admin Password!");
       }
